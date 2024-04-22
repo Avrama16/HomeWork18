@@ -48,13 +48,18 @@ extension MainModel: MainModelInput {
         
         guard let url = URL(string: urlString) else { return }
         
-        if let data = try? Data(contentsOf: url) {
+        URLSession.shared.dataTask(with: url) { [weak self] (data, response, error) in
             
-            dataService.write(image: data, for: urlString)
-            output.imageDataDidLoad(for: indexPath)
-        }
+            guard let imageData = data else { return }
+            
+            self?.dataService.write(image: imageData, for: urlString)
+            DispatchQueue.main.async { [weak self] in
+                self?.output.imageDataDidLoad(for: indexPath)
+            }
+        }.resume()
     }
 }
+
 
 // MARK: - Private
 private extension MainModel {
